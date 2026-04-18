@@ -134,7 +134,11 @@ function formatNum(n: number): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function Index() {
+interface IndexProps {
+  onMenu?: () => void;
+}
+
+export default function Index({ onMenu }: IndexProps) {
   const [coins, setCoins] = useState(0);
   const [crystals, setCrystals] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
@@ -385,6 +389,13 @@ export default function Index() {
             </div>
           </div>
           <div className="flex gap-2">
+            {onMenu && (
+              <button onClick={onMenu}
+                className="px-3 py-2 rounded border border-white/10 text-white/40 hover:text-white/70 hover:border-white/25 transition-all text-xs"
+                style={{ fontFamily: "'Orbitron', monospace" }}>
+                ← МЕНЮ
+              </button>
+            )}
             <button onClick={() => setSoundOn(s => !s)}
               className="px-3 py-2 rounded border border-white/10 text-white/50 hover:text-white/80 hover:border-white/30 transition-all text-sm">
               {soundOn ? "🔊" : "🔇"}
