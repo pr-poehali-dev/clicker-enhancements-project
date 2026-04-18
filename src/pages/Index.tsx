@@ -203,7 +203,13 @@ export default function Index({ onMenu }: IndexProps) {
       setCps(save.cps ?? 0);
       setAutoClickers(save.autoClickers ?? 0);
       if (save.upgrades) setUpgrades(save.upgrades);
-      if (save.achievements) setAchievements(save.achievements);
+      if (save.achievements) {
+        // condition is a function — cannot be serialized to JSON, restore from ACHIEVEMENTS_DEF
+        setAchievements(ACHIEVEMENTS_DEF.map(def => {
+          const saved = save.achievements.find((a: { id: string }) => a.id === def.id);
+          return { ...def, unlocked: saved?.unlocked ?? false };
+        }));
+      }
     } catch (_e) { /* no save found */ }
   }, []);
 
@@ -216,7 +222,7 @@ export default function Index({ onMenu }: IndexProps) {
         clickPower: clickPowerRef.current, cps: cpsRef.current,
         autoClickers: autoClickersRef.current,
         upgrades: upgradesRef.current,
-        achievements: achievementsRef.current,
+        achievements: achievementsRef.current.map(a => ({ id: a.id, unlocked: a.unlocked })),
       }));
     }, 5000);
     return () => clearInterval(t);
