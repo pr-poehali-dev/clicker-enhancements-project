@@ -149,6 +149,7 @@ export default function Index({ onMenu }: IndexProps) {
   );
   const [activeTab, setActiveTab] = useState<"upgrades" | "achievements" | "stats">("upgrades");
   const [floatNums, setFloatNums] = useState<FloatNum[]>([]);
+  const [btnPressed, setBtnPressed] = useState(false);
   const [clickPower, setClickPower] = useState(1);
   const [cps, setCps] = useState(0);
   const [autoClickers, setAutoClickers] = useState(0);
@@ -293,8 +294,9 @@ export default function Index({ onMenu }: IndexProps) {
     const rect = btnRef.current?.getBoundingClientRect();
     if (rect) {
       const id = floatIdRef.current++;
-      const x = e.clientX - rect.left + (Math.random() * 40 - 20);
-      const y = e.clientY - rect.top - 20;
+      // coords relative to button center, offset for wrapper (wrapper=260, btn=192, pad=34)
+      const x = (e.clientX - rect.left) + 34 + (Math.random() * 30 - 15);
+      const y = (e.clientY - rect.top) + 34 - 30;
       setFloatNums(prev => [...prev, { id, x, y, value: power }]);
       setTimeout(() => setFloatNums(prev => prev.filter(f => f.id !== id)), 900);
     }
@@ -436,33 +438,48 @@ export default function Index({ onMenu }: IndexProps) {
           <div className="flex flex-col items-center gap-5">
 
             {/* The big button */}
-            <div className="relative flex items-center justify-center">
-              {/* Outer pulse ring */}
-              <div className="absolute w-56 h-56 rounded-full" style={{ border: "1px solid rgba(0,255,255,0.2)", animation: "pulse-ring 2s ease-in-out infinite" }} />
-              <div className="absolute w-64 h-64 rounded-full" style={{ border: "1px solid rgba(0,255,255,0.08)", animation: "pulse-ring 2s ease-in-out infinite 0.5s" }} />
+            <div className="relative flex items-center justify-center" style={{ width: 260, height: 260 }}>
+              {/* Outer pulse rings */}
+              <div className="absolute w-56 h-56 rounded-full pointer-events-none" style={{ border: "1px solid rgba(0,255,255,0.2)", animation: "pulse-ring 2s ease-in-out infinite" }} />
+              <div className="absolute w-64 h-64 rounded-full pointer-events-none" style={{ border: "1px solid rgba(0,255,255,0.08)", animation: "pulse-ring 2s ease-in-out infinite 0.5s" }} />
+
+              {/* Floating numbers — outside button, inside wrapper */}
+              {floatNums.map(fn => (
+                <span key={fn.id}
+                  className="absolute text-base font-black pointer-events-none select-none"
+                  style={{
+                    left: fn.x,
+                    top: fn.y,
+                    color: "#00ffff",
+                    fontFamily: "'Orbitron', monospace",
+                    textShadow: "0 0 8px #00ffff",
+                    animation: "float-up 0.9s ease-out forwards",
+                    zIndex: 50,
+                  }}>
+                  +{fn.value}
+                </span>
+              ))}
 
               <button
                 ref={btnRef}
                 onClick={handleClick}
-                className="relative w-48 h-48 rounded-full overflow-visible"
+                onMouseDown={() => setBtnPressed(true)}
+                onMouseUp={() => setBtnPressed(false)}
+                onMouseLeave={() => setBtnPressed(false)}
+                onTouchStart={() => setBtnPressed(true)}
+                onTouchEnd={() => setBtnPressed(false)}
+                className="relative w-48 h-48 rounded-full overflow-hidden select-none"
                 style={{
                   background: "radial-gradient(circle at 40% 35%, rgba(0,255,255,0.18) 0%, rgba(0,255,255,0.06) 50%, transparent 100%)",
                   border: "3px solid #00ffff",
-                  boxShadow: "0 0 30px rgba(0,255,255,0.5), 0 0 60px rgba(0,255,255,0.2), inset 0 0 40px rgba(0,255,255,0.06)",
+                  boxShadow: btnPressed
+                    ? "0 0 50px rgba(0,255,255,0.9), 0 0 90px rgba(0,255,255,0.5), inset 0 0 40px rgba(0,255,255,0.15)"
+                    : "0 0 30px rgba(0,255,255,0.5), 0 0 60px rgba(0,255,255,0.2), inset 0 0 40px rgba(0,255,255,0.06)",
                   cursor: "pointer",
+                  transform: btnPressed ? "scale(0.93)" : "scale(1)",
                   transition: "transform 0.08s ease, box-shadow 0.08s ease",
                 }}
-                onMouseDown={e => { e.currentTarget.style.transform = "scale(0.93)"; e.currentTarget.style.boxShadow = "0 0 50px rgba(0,255,255,0.8), 0 0 80px rgba(0,255,255,0.4), inset 0 0 40px rgba(0,255,255,0.15)"; }}
-                onMouseUp={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(0,255,255,0.5), 0 0 60px rgba(0,255,255,0.2), inset 0 0 40px rgba(0,255,255,0.06)"; }}
               >
-                {/* Float numbers */}
-                {floatNums.map(fn => (
-                  <span key={fn.id}
-                    className="absolute text-base font-black pointer-events-none select-none"
-                    style={{ left: fn.x, top: fn.y, color: "#00ffff", fontFamily: "'Orbitron', monospace", textShadow: "0 0 8px #00ffff", animation: "float-up 0.9s ease-out forwards", zIndex: 50 }}>
-                    +{fn.value}
-                  </span>
-                ))}
                 <div className="flex flex-col items-center justify-center h-full gap-1 select-none">
                   <div className="text-5xl" style={{ filter: "drop-shadow(0 0 14px #00ffff) drop-shadow(0 0 28px #00ffff)" }}>⚡</div>
                   <div className="text-xs font-black tracking-[0.2em]" style={{ fontFamily: "'Orbitron', monospace", color: "#00ffff" }}>КЛИК</div>
